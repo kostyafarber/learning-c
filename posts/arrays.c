@@ -16,6 +16,16 @@ void iterate_over_nums_array(int* nums) {
     printf("\n");
 }
 
+void iterate_over_nums_array_size(size_t size, int* nums) {
+    int i = 0;
+    while (i < size - 1) {
+        printf("%d ", *nums);
+        nums++;
+        i++;
+    }
+    printf("\n");
+}
+
 int main() {
     char* name = "Kostya";
     int nums[7] = {0, 1, 2, 3, 5, 5, -1};
@@ -31,5 +41,7 @@ int main() {
 
     signed int num_elements = sizeof(nums) / sizeof(nums[0]);
     printf("Length of nums array is: %d\n", num_elements);
+
+    iterate_over_nums_array_size(7, nums);
     return 0;
 }
