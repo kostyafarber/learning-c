@@ -7,3 +7,8 @@
 #include <string.h>     /* Commonly used string-handling functions */
 #include <stdbool.h>    /* 'bool' type plus 'true' and 'false' constants */
 #include <fcntl.h>
+
+void sys_error(char* error_type) {
+    perror(error_type);
+    exit(EXIT_FAILURE);
+}
