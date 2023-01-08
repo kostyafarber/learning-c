@@ -1,8 +1,14 @@
 #include "lpih.h"
 #define BUFFERSIZE 1024
 
+void usage(char *progname, int status);
+
 int
 main(int argc, char **argv) {
+    if (argc != 3) {
+        usage(argv[0], EXIT_FAILURE);
+    }
+    
     char* file_in = argv[1];
     char* file_out = argv[2];
     char buffer[BUFFERSIZE];
@@ -34,4 +40,9 @@ main(int argc, char **argv) {
     }
 
     exit(EXIT_SUCCESS);
+}
+
+void usage(char *progname, int status) {
+    fprintf(stderr, "usage: %s infile outfile\n", progname);
+    exit(status);
 }
