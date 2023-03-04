@@ -22,7 +22,6 @@ main(int argc, char **argv) {
     } 
 
     fchdir(fd);
-
     char *cwdbuf = malloc(PATH_MAX);
     
     if ((getcwd(cwdbuf, PATH_MAX)) == NULL) {
