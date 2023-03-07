@@ -17,7 +17,8 @@ enum types {
 int print_size_dir(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf);
 void print_and_increment(enum types file_type, const char *fpath);
 
-static int file_counts[NUM_TYPES];
+int file_counts[NUM_TYPES];
+int total = 0;
 const char *msgs[] = {
     "is a file",
     "is a directory",
@@ -33,21 +34,31 @@ main(int argc, char **argv)
 
     printf("Number of files after traversal is: %d\n", file_counts[file]);
     printf("Number of directories after traversal is: %d\n", file_counts[dir]);
+    printf("Total is: %d\n", total);
     exit(EXIT_SUCCESS);
 }
 
 int print_size_dir(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf) {
+    int file_type = sb->st_mode;
+
+    printf("File type:                ");
     
-    if (typeflag == FTW_F) {
-        print_and_increment(file, fpath);
-    } else if (typeflag == FTW_D) {
-        print_and_increment(dir, fpath);
+        switch (file_type & S_IFMT) {
+        case S_IFBLK:  printf("block device\n");            break;
+        case S_IFCHR:  printf("character device\n");        break;
+        case S_IFDIR:  printf("directory\n");               break;
+        case S_IFIFO:  printf("FIFO/pipe\n");               break;
+        case S_IFLNK:  printf("symlink\n");                 break;
+        case S_IFREG:  printf("regular file\n");            break;
+        case S_IFSOCK: printf("socket\n");                  break;
+        default:       printf("unknown?\n");                break;
     }
-    // printf("Size of: %s is %lld\n", fpath, sb->st_size);
+
     return 0;
 }
 
 void print_and_increment(enum types file_type, const char *fpath) {
+    total++;
     file_counts[file_type]++;
     printf("%s %s\n", fpath, msgs[file_type]);
 }
