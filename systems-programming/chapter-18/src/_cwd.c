@@ -18,61 +18,48 @@
 #include "lpih.h"
 #include <dirent.h>
 #include <sys/stat.h>
+#include <limits.h>
 
 struct dir_attr_check {
     ino_t i_node_child;
     ino_t i_node_parent;
-    __uint8_t file_type;
+    dev_t file_type;
 };
 
+static char path[PATH_MAX];
 struct dir_attr_check* 
 get_curr_dir_attrs(void) 
 {
-    DIR *child_dir, *parent_dir;
-    struct dirent *dp_child, *dp_parent;
+    struct stat *child, *parent;
+    child = (struct stat*) malloc(sizeof(struct stat));
+    if (child == NULL) 
+        sys_error("malloc");
 
-    if ((child_dir = opendir(".")) == NULL) {
-        sys_error("open");
-    }
+    if ((stat(".", child)) == -1)
+        sys_error("stat");
 
-    if ((dp_child = readdir(child_dir)) == NULL) {
-        sys_error("readdir");
-    }
-    
-    if ((parent_dir = opendir("..")) == NULL) {
-        sys_error("open");
-    }
+    parent = (struct stat*) malloc(sizeof(struct stat));
+    if (parent == NULL) 
+        sys_error("malloc");
 
-    if ((dp_parent = readdir(parent_dir)) == NULL) {
-        sys_error("readdir");
-    }
+    if ((stat("..", parent)) == -1)
+        sys_error("stat");
 
     struct dir_attr_check *dir_attrs = (struct dir_attr_check*) malloc(sizeof(struct dir_attr_check));
     if (dir_attrs == NULL) {
         return NULL;
     }
     
-    dir_attrs->i_node_child = dp_child->d_ino;
-    dir_attrs->i_node_parent = dp_parent->d_ino;
-    dir_attrs->file_type = dp_child->d_type;
+    dir_attrs->i_node_child = child->st_ino;
+    dir_attrs->i_node_parent = parent->st_ino;
+    dir_attrs->file_type = child->st_dev;
 
     return dir_attrs;
 }
 
 void 
-traverse_directories(ino_t child, ino_t parent)
+find_dir(ino_t child)
 {
-    if (child == parent) {
-        return;
-    }
- 
-    chdir("..");
-
-    struct dir_attr_check *curr_dir_attrs = get_curr_dir_attrs();
-    if (curr_dir_attrs == NULL) {
-        printf("Failed to allocate pointer");
-        exit(EXIT_FAILURE);
-    }
 
     DIR *curr_dir;
     struct dirent *dp;
@@ -80,10 +67,51 @@ traverse_directories(ino_t child, ino_t parent)
     if ((curr_dir = opendir(".")) == NULL) {
         sys_error("open");
     }
-    
+
     while ((dp = readdir(curr_dir)) != NULL) {
-        if (dp->d_ino == child)
+        struct stat sfile;
+        stat(dp->d_name, &sfile);
+        if (sfile.st_ino == child)
+            strcat(path, dp->d_name);
             printf("Parent directory found, name is: %s\n", dp->d_name);
+    }
+}
+
+void 
+traverse_directories(ino_t child, ino_t parent)
+{
+ 
+    if (child == parent) {
+        return;
+    }
+
+    chdir("..");
+
+    DIR *curr_dir;
+    struct dirent *dp;
+    
+    curr_dir = opendir(".");
+    if (curr_dir == NULL) {
+        sys_error("open");
+    }
+
+    while ((dp = readdir(curr_dir)) != NULL) {
+        if (errno != 0) {
+            sys_error("readdir");
+        } 
+
+        struct stat sfile;
+        stat(dp->d_name, &sfile);
+        if (sfile.st_ino == child) {
+            printf("Parent directory found, name is: %s\n", dp->d_name);
+        }
+    }
+    closedir(curr_dir);
+
+    struct dir_attr_check *curr_dir_attrs = get_curr_dir_attrs();
+    if (curr_dir_attrs == NULL) {
+        printf("Failed to allocate pointer");
+        exit(EXIT_FAILURE);
     }
 
     traverse_directories(curr_dir_attrs->i_node_child, curr_dir_attrs->i_node_parent);
