@@ -19,6 +19,8 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <limits.h>
+#include <string.h>  
+
 
 struct dir_attr_check {
     ino_t i_node_child;
@@ -27,6 +29,10 @@ struct dir_attr_check {
 };
 
 static char path[PATH_MAX];
+static char curr_path[PATH_MAX];
+static char temp_path[PATH_MAX];
+
+char *sep = "/";
 struct dir_attr_check* 
 get_curr_dir_attrs(void) 
 {
@@ -72,7 +78,6 @@ find_dir(ino_t child)
         struct stat sfile;
         stat(dp->d_name, &sfile);
         if (sfile.st_ino == child)
-            strcat(path, dp->d_name);
             printf("Parent directory found, name is: %s\n", dp->d_name);
     }
 }
@@ -103,7 +108,10 @@ traverse_directories(ino_t child, ino_t parent)
         struct stat sfile;
         stat(dp->d_name, &sfile);
         if (sfile.st_ino == child) {
-            printf("Parent directory found, name is: %s\n", dp->d_name);
+            snprintf(curr_path, PATH_MAX, "%s%s", sep, dp->d_name);
+            snprintf(temp_path, PATH_MAX, "%s", path);
+            snprintf(path, PATH_MAX, "%s", curr_path);
+            strcat(path, temp_path);
         }
     }
     closedir(curr_dir);
@@ -129,5 +137,7 @@ main(int argc, char **argv)
     
     traverse_directories(curr_dir_attrs->i_node_child, curr_dir_attrs->i_node_parent);
     free(curr_dir_attrs);
+
+    printf("%s\n", path);
     exit(EXIT_SUCCESS);
 }
