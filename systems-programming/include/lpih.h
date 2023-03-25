@@ -8,4 +8,5 @@
 #include <stdbool.h>    /* 'bool' type plus 'true' and 'false' constants */
 #include <fcntl.h>
 
-void sys_error(char* error_type);
+void sys_error(char *error_type);
+void usage(const char *prog_name, const char *msg);
